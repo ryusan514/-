@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ソフトテニス前衛ポジション</title>
+
+<style>
+
+body{
+margin:0;
+background:#0b1a33;
+color:white;
+font-family:sans-serif;
+text-align:center;
+}
+
+canvas{
+background:#69b62c;
+border:4px solid white;
+margin-top:20px;
+touch-action:none;
+}
+
+input{
+width:300px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>🎾 ソフトテニス 前衛ポジション</h2>
+<p>赤い打点をドラッグ</p>
+
+<canvas id="court" width="420" height="700"></canvas>
+
+<br><br>
+
+打球角度
+<input type="range" id="angle" min="5" max="55" value="25">
+<span id="angleVal">25</span>°
+
+<script>
+
+const canvas=document.getElementById("court")
+const ctx=canvas.getContext("2d")
+
+const w=canvas.width
+const h=canvas.height
+
+const topBaseline=0
+const bottomBaseline=h
+
+const netY=h/2
+
+const serviceTop=h*0.25
+const serviceBottom=h*0.75
+
+const centerX=w/2
+const centerY=bottomBaseline
+
+let hitX=centerX
+
+let angle=25
+
+let dragging=false
+
+document.getElementById("angle").oninput=(e)=>{
+angle=parseFloat(e.target.value)
+document.getElementById("angleVal").innerText=angle
+draw()
+}
+
+canvas.addEventListener("mousedown",startDrag)
+canvas.addEventListener("mousemove",drag)
+canvas.addEventListener("mouseup",()=>dragging=false)
+
+canvas.addEventListener("touchstart",(e)=>startDrag(e.touches[0]))
+canvas.addEventListener("touchmove",(e)=>drag(e.touches[0]))
+canvas.addEventListener("touchend",()=>dragging=false)
+
+function startDrag(e){
+
+const rect=canvas.getBoundingClientRect()
+
+const x=e.clientX-rect.left
+const y=e.clientY-rect.top
+
+if(Math.hypot(x-hitX,y-topBaseline)<20){
+dragging=true
+}
+
+}
+
+function drag(e){
+
+if(!dragging)return
+
+const rect=canvas.getBoundingClientRect()
+
+hitX=e.clientX-rect.left
+
+if(hitX<10) hitX=10
+if(hitX>w-10) hitX=w-10
+
+draw()
+
+}
+
+function drawCourt(){
+
+ctx.strokeStyle="white"
+ctx.lineWidth=3
+
+ctx.strokeRect(0,0,w,h)
+
+ctx.beginPath()
+ctx.moveTo(0,netY)
+ctx.lineTo(w,netY)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(0,serviceTop)
+ctx.lineTo(w,serviceTop)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(0,serviceBottom)
+ctx.lineTo(w,serviceBottom)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(centerX,serviceTop)
+ctx.lineTo(centerX,serviceBottom)
+ctx.stroke()
+
+}
+
+function drawTriangle(){
+
+const dx=centerX-hitX
+const dy=centerY-topBaseline
+
+const baseAngle=Math.atan2(dy,dx)
+
+const left=baseAngle + (angle*Math.PI/180)
+const right=baseAngle - (angle*Math.PI/180)
+
+const length=1000
+
+const x1=hitX+Math.cos(left)*length
+const y1=topBaseline+Math.sin(left)*length
+
+const x2=hitX+Math.cos(right)*length
+const y2=topBaseline+Math.sin(right)*length
+
+ctx.fillStyle="rgba(255,140,0,0.25)"
+
+ctx.beginPath()
+ctx.moveTo(hitX,topBaseline)
+ctx.lineTo(x1,y1)
+ctx.lineTo(x2,y2)
+ctx.closePath()
+ctx.fill()
+
+ctx.strokeStyle="rgba(255,80,40,0.8)"
+
+ctx.beginPath()
+ctx.moveTo(hitX,topBaseline)
+ctx.lineTo(x1,y1)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(hitX,topBaseline)
+ctx.lineTo(x2,y2)
+ctx.stroke()
+
+}
+
+function drawFront(){
+
+const frontY=netY+60
+
+const t=(frontY-topBaseline)/(centerY-topBaseline)
+
+const frontX=hitX+(centerX-hitX)*t
+
+ctx.fillStyle="yellow"
+
+ctx.beginPath()
+ctx.arc(frontX,frontY,10,0,Math.PI*2)
+ctx.fill()
+
+}
+
+function drawCenterLine(){
+
+ctx.strokeStyle="#6bbcff"
+ctx.setLineDash([6,6])
+
+ctx.beginPath()
+ctx.moveTo(hitX,topBaseline)
+ctx.lineTo(centerX,centerY)
+ctx.stroke()
+
+ctx.setLineDash([])
+
+}
+
+function drawHit(){
+
+ctx.fillStyle="red"
+
+ctx.beginPath()
+ctx.arc(hitX,topBaseline,12,0,Math.PI*2)
+ctx.fill()
+
+}
+
+function drawCenter(){
+
+ctx.fillStyle="#6bbcff"
+
+ctx.beginPath()
+ctx.arc(centerX,centerY,6,0,Math.PI*2)
+ctx.fill()
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,w,h)
+
+drawTriangle()
+drawCourt()
+drawCenterLine()
+drawFront()
+drawHit()
+drawCenter()
+
+}
+
+draw()
+
+</script>
+
+</body>
+</html>
